@@ -6,12 +6,12 @@ router = APIRouter()
 
 @router.get("/")
 async def get_all():
-    pass
+    return "asd"
 
 
 @router.post("/")
 async def create():
-    pass
+    return "asd"
 
 
 @router.delete("/")
