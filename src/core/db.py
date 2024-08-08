@@ -3,7 +3,7 @@ from beanie import init_beanie
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from src.api.model.event_model import Event
+from src.api.model.event_model import Event, Guest
 from src.core.config import settings
 
 
@@ -29,7 +29,7 @@ async def start_async_mongo():
 
     try:
         _client = AsyncIOMotorClient(settings.CONNECTION_STRING)
-        await init_beanie(_client[settings.DB_NAME], document_models=[Event])
+        await init_beanie(_client[settings.DB_NAME], document_models=[Event, Guest])
 
     except Exception as _e:
         print("Error")
