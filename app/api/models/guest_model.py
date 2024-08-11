@@ -1,6 +1,8 @@
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 
+from app.core.utils.partial import partial_model
+
 
 class Guest(BaseModel):
     name: str
@@ -10,4 +12,12 @@ class Guest(BaseModel):
 
 
 class GuestDocument(Document, Guest):
+    pass
+
+    class Settings:
+        name = "guests"
+
+
+@partial_model()
+class PartialGuestDocument(GuestDocument):
     pass

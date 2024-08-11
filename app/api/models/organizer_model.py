@@ -8,3 +8,6 @@ class Organizer(BaseModel):
 
 class OrganizerDocument(Document, Organizer):
     pass
+
+    class Settings:
+        name = "organizers"
