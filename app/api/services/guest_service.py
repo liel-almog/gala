@@ -2,10 +2,12 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId, UpdateResponse
-from beanie.operators import Set
+from beanie.operators import Pull, Set
 from fastapi import Depends
+from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
+from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import GuestDocument
 
 
@@ -30,8 +32,21 @@ class GuestService:
             Set(guest_dict), response_type=UpdateResponse.UPDATE_RESULT
         )
 
-    async def delete(self):
-        pass
+    async def delete_one_by_id(
+        self, id: PydanticObjectId, session: AsyncIOMotorClientSession | None = None
+    ):
+        return await GuestDocument.find_one(GuestDocument.id == id).delete_one(
+            session=session
+        )
+
+    async def delete_event_from_guests(
+        self,
+        event_id: PydanticObjectId,
+        session: AsyncIOMotorClientSession | None = None,
+    ):
+        return await GuestDocument.find_many({"events._id": event_id}).update_many(
+            Pull({GuestDocument.events: {EventDocument.id: event_id}}), session=session
+        )
 
 
 def get_guest_service():

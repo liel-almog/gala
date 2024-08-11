@@ -5,6 +5,7 @@ from fastapi import APIRouter, Body, HTTPException, Path, status
 
 from app.api.models.event_model import EventDocument, PartialEventDocument
 from app.api.services.event_service import CommonEventService
+from app.api.services.register_service import CommonRegisterService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -75,8 +76,11 @@ async def update_one_by_id(
 
 
 @router.delete("/{event_id}", name="Delete event")
-async def delete():
-    pass
+async def delete(
+    event_id: Annotated[PydanticObjectId, Path()],
+    register_service: CommonRegisterService,
+):
+    await register_service.delete_event(event_id)
 
 
 @router.get("/{event_id}/guests")

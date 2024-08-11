@@ -5,6 +5,7 @@ from fastapi import APIRouter, Body, HTTPException, Path, status
 
 from app.api.models.guest_model import GuestDocument, PartialGuestDocument
 from app.api.services.guest_service import CommonGuestService
+from app.api.services.register_service import CommonRegisterService
 
 
 router = APIRouter()
@@ -76,10 +77,15 @@ async def update_one_by_id(
 
 
 @router.delete("/{guest_id}")
-async def delete():
-    pass
+async def delete(
+    guest_id: Annotated[PydanticObjectId, Path()],
+    register_service: CommonRegisterService,
+):
+    return await register_service.delete_guest(guest_id)
 
 
 @router.get("/{guest_id}/events")
-async def get_events_by_guest_id():
+async def get_events_by_guest_id(
+    guest_service: CommonGuestService, guest_id: Annotated[PydanticObjectId, Path()]
+):
     pass
