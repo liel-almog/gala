@@ -84,20 +84,25 @@ class RegisterService:
     async def unregister(self, unregister: UnRegistraion):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
-                delete_event_from_guest_task = (
+                remove_event_from_guest = await (
                     self._guest_service.remove_event_from_guest(
                         guest_id=unregister.guest_id, event_id=unregister.event_id
                     )
                 )
-                delete_guest_from_event_task = (
+
+                if not remove_event_from_guest.matched_count:
+                    raise GuestNotFound("Guest not found")
+
+                remove_guest_from_event = await (
                     self._event_service.remove_guest_from_event(
                         event_id=unregister.event_id, guest_id=unregister.guest_id
                     )
                 )
 
-                return await gather(
-                    *(delete_event_from_guest_task, delete_guest_from_event_task)
-                )
+                if not remove_guest_from_event.matched_count:
+                    raise EventNotFound("Event not found")
+
+                return (remove_event_from_guest, remove_guest_from_event)
 
 
 def get_register_service(
