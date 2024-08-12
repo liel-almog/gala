@@ -7,7 +7,7 @@ class BasicInfo(BaseModel):
     name: str
 
 
-class Registraion(BaseModel):
+class Registration(BaseModel):
     guest: BasicInfo
     event: BasicInfo
 

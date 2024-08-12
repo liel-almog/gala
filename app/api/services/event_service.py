@@ -2,13 +2,14 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId, UpdateResponse
-from beanie.operators import Pull, Set
+from beanie.operators import AddToSet, Pull, Set
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import GuestDocument
+from app.api.models.register_model import BasicInfo
 
 
 class EventService:
@@ -41,13 +42,33 @@ class EventService:
             session=session
         )
 
-    async def delete_guest_from_events(
+    async def remove_guest_from_all_events(
         self,
         guest_id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ):
         return await EventDocument.find_many({"guests._id": guest_id}).update_many(
             Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
+        )
+
+    async def remove_guest_from_event(
+        self,
+        event_id: PydanticObjectId,
+        guest_id: PydanticObjectId,
+        session: AsyncIOMotorClientSession | None = None,
+    ) -> UpdateResult:
+        return await EventDocument.find_one(EventDocument.id == event_id).update_one(
+            Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
+        )
+
+    async def add_guest_to_event(
+        self,
+        event_id: PydanticObjectId,
+        guest: BasicInfo,
+        session: AsyncIOMotorClientSession | None = None,
+    ) -> UpdateResult:
+        return await EventDocument.find_one(EventDocument.id == event_id).update_one(
+            AddToSet({EventDocument.guests: guest}), session=session
         )
 
 
