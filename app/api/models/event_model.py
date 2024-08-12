@@ -17,6 +17,7 @@ class Event(BaseModel):
     location: str
     guests: list[GuestInfo] | None = Field(default=[])
     date: datetime.datetime  # Date does not have be greater than today
+    is_vip_event: bool = Field(alias="isVipEvent", default=False)
 
 
 class EventDocument(Document, Event):

@@ -9,7 +9,7 @@ from pymongo.results import UpdateResult
 
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import GuestDocument
-from app.api.models.register_model import BasicInfo
+from app.api.models.register_model import BasicRegistrationInfo
 
 
 class EventService:
@@ -64,11 +64,11 @@ class EventService:
     async def add_guest_to_event(
         self,
         event_id: PydanticObjectId,
-        guest: BasicInfo,
+        guest_basic_info: BasicRegistrationInfo,
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
         return await EventDocument.find_one(EventDocument.id == event_id).update_one(
-            AddToSet({EventDocument.guests: guest}), session=session
+            AddToSet({EventDocument.guests: guest_basic_info}), session=session
         )
 
 

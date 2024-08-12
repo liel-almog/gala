@@ -1,0 +1,2 @@
+class GuestNotVipException(Exception):
+    pass
