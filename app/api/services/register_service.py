@@ -36,33 +36,35 @@ class RegisterService:
     async def delete_guest(self, guest_id: PydanticObjectId):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
-                remove_guest_task = self._guest_service.delete_one_by_id(guest_id)
-                remove_guest_from_events_task = (
+                delete_guest = await self._guest_service.delete_one_by_id(guest_id)
+                remove_guest_from_events = await (
                     self._event_service.remove_guest_from_all_events(guest_id)
                 )
 
-                return await gather(*(remove_guest_task, remove_guest_from_events_task))
+                if not delete_guest.deleted_count:
+                    raise GuestNotFound(f"Guest with id {guest_id} not found")
+
+                return (delete_guest, remove_guest_from_events)
 
     async def delete_event(self, event_id: PydanticObjectId):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
-                delete_event_task = self._event_service.delete_one_by_id(event_id)
-                delete_event_from_guests_task = (
+                delete_event = await self._event_service.delete_one_by_id(event_id)
+                remove_event_from_guests = await (
                     self._guest_service.remove_event_from_all_guests(event_id)
                 )
 
-                return await gather(*(delete_event_from_guests_task, delete_event_task))
+                if not delete_event.deleted_count:
+                    raise EventNotFound(f"Event with id {event_id} not found")
+
+                return (delete_event, remove_event_from_guests)
 
     async def register(self, registration: Registration):
         event = await self._event_service.get_one_by_id(registration.event_id)
-        if not event:
-            raise EventNotFound("Event not found")
 
         # No need to fetch the guest if the event is not VIP
         if event.is_vip_event:
             guest = await self._guest_service.get_one_by_id(registration.guest_id)
-            if not guest:
-                raise GuestNotFound("Guest not found")
 
             if event.is_vip_event and not guest.is_vip:
                 raise GuestNotVipException("Guest is not VIP")
@@ -84,20 +86,19 @@ class RegisterService:
     async def unregister(self, unregister: UnRegistraion):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
-                delete_event_from_guest_task = (
+                remove_event_from_guest = await (
                     self._guest_service.remove_event_from_guest(
                         guest_id=unregister.guest_id, event_id=unregister.event_id
                     )
                 )
-                delete_guest_from_event_task = (
+
+                remove_guest_from_event = await (
                     self._event_service.remove_guest_from_event(
                         event_id=unregister.event_id, guest_id=unregister.guest_id
                     )
                 )
 
-                return await gather(
-                    *(delete_event_from_guest_task, delete_guest_from_event_task)
-                )
+                return (remove_event_from_guest, remove_guest_from_event)
 
 
 def get_register_service(

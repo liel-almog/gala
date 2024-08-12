@@ -1,9 +1,12 @@
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BasicRegistrationInfo(BaseModel):
-    id: PydanticObjectId = Field(serialization_alias="_id")
+    # We have to set it to populate_by_name=True to be able to use alias in nested models
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: PydanticObjectId = Field(alias="_id")
     name: str
 
 

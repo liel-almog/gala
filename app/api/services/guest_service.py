@@ -7,6 +7,7 @@ from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
+from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
@@ -20,7 +21,11 @@ class GuestService:
         return await GuestDocument.find_all().to_list()
 
     async def get_one_by_id(self, id: PydanticObjectId):
-        return await GuestDocument.find_one(GuestDocument.id == id)
+        guest = await GuestDocument.find_one(GuestDocument.id == id)
+        if not guest:
+            raise GuestNotFound(f"Guest with id {id} not found")
+
+        return guest
 
     async def create(self, guest: GuestDocument):
         return await GuestDocument.insert_one(guest)
@@ -29,16 +34,26 @@ class GuestService:
         self, id: PydanticObjectId, guest: GuestDocument
     ) -> UpdateResult:
         guest_dict = guest.model_dump(exclude_unset=True, by_alias=True)
-        return await GuestDocument.find_one(GuestDocument.id == id).update_one(
+        res = await GuestDocument.find_one(GuestDocument.id == id).update_one(
             Set(guest_dict), response_type=UpdateResponse.UPDATE_RESULT
         )
+
+        if not res.matched_count:
+            raise GuestNotFound(f"Guest with id {id} not found")
+
+        return res
 
     async def delete_one_by_id(
         self, id: PydanticObjectId, session: AsyncIOMotorClientSession | None = None
     ):
-        return await GuestDocument.find_one(GuestDocument.id == id).delete_one(
+        res = await GuestDocument.find_one(GuestDocument.id == id).delete_one(
             session=session
         )
+
+        if not res.deleted_count:
+            raise GuestNotFound(f"Guest with id {id} not found")
+
+        return res
 
     async def remove_event_from_all_guests(
         self,
@@ -55,9 +70,14 @@ class GuestService:
         event_id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
-        return await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
+        res = await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
             Pull({GuestDocument.events: {EventDocument.id: event_id}}), session=session
         )
+
+        if not res.matched_count:
+            raise GuestNotFound(f"Guest with id {guest_id} not found")
+
+        return res
 
     async def add_event_to_guest(
         self,
@@ -65,9 +85,14 @@ class GuestService:
         event_basic_info: BasicRegistrationInfo,
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
-        return await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
+        res = await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
             AddToSet({GuestDocument.events: event_basic_info}), session=session
         )
+
+        if not res.matched_count:
+            raise GuestNotFound(f"Guest with id {guest_id} not found")
+
+        return res
 
 
 def get_guest_service():
