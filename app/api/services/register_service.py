@@ -1,3 +1,4 @@
+import logging
 from asyncio import gather
 from typing import Annotated
 
@@ -51,18 +52,20 @@ class RegisterService:
                     self._guest_service.remove_event_from_all_guests(event_id)
                 )
 
-                return await gather(*(delete_event_from_guests_task, delete_event_task))
+                res = await gather(*(delete_event_from_guests_task, delete_event_task))
+                [del_res] = res
+
+                if not del_res.deleted_count:
+                    raise EventNotFound("Event not found")
+
+                return res
 
     async def register(self, registration: Registration):
         event = await self._event_service.get_one_by_id(registration.event_id)
-        if not event:
-            raise EventNotFound("Event not found")
 
         # No need to fetch the guest if the event is not VIP
         if event.is_vip_event:
             guest = await self._guest_service.get_one_by_id(registration.guest_id)
-            if not guest:
-                raise GuestNotFound("Guest not found")
 
             if event.is_vip_event and not guest.is_vip:
                 raise GuestNotVipException("Guest is not VIP")

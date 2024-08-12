@@ -7,6 +7,7 @@ from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
+from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
@@ -20,7 +21,11 @@ class GuestService:
         return await GuestDocument.find_all().to_list()
 
     async def get_one_by_id(self, id: PydanticObjectId):
-        return await GuestDocument.find_one(GuestDocument.id == id)
+        guest = await GuestDocument.find_one(GuestDocument.id == id)
+        if not guest:
+            raise GuestNotFound(f"Guest not found with id {id}")
+
+        return guest
 
     async def create(self, guest: GuestDocument):
         return await GuestDocument.insert_one(guest)

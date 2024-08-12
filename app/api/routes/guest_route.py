@@ -30,6 +30,7 @@ async def get_guest_by_id(
     try:
         guest = await guest_service.get_one_by_id(guest_id)
         if not guest:
+            logger.error(f"Could not fetch guest with id {guest_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Guest not found"
             )
@@ -66,6 +67,7 @@ async def update_one_by_id(
         logger.info(f"Updated guest with id {guest_id}")
 
         if update_result.matched_count == 0:
+            logger.error(f"Could not update guest with id {guest_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Guest not found"
             )
@@ -81,7 +83,20 @@ async def delete(
     guest_id: Annotated[PydanticObjectId, Path()],
     register_service: CommonRegisterService,
 ):
-    return await register_service.delete_guest(guest_id)
+    [del_res] = await register_service.delete_guest(guest_id)
+
+    if not del_res.acknowledged:
+        logger.error(f"Could not delete guest with id {guest_id}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not delete guest",
+        )
+
+    if not del_res.deleted_count:
+        logger.error(f"Could not delete guest with id {guest_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Guest not found"
+        )
 
 
 @router.get("/{guest_id}/events")
