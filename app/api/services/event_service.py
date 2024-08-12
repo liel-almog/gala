@@ -23,7 +23,7 @@ class EventService:
     async def get_one_by_id(self, id: PydanticObjectId):
         event = await EventDocument.find_one(EventDocument.id == id)
         if not event:
-            raise EventNotFound(f"Event not found with id {id}")
+            raise EventNotFound(f"Event with id {id} not found")
 
         return event
 
@@ -39,7 +39,7 @@ class EventService:
         )
 
         if not res.matched_count:
-            raise EventNotFound(f"Event not found with id {id}")
+            raise EventNotFound(f"Event with id {id} not found")
 
         return res
 
@@ -48,9 +48,14 @@ class EventService:
         id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ):
-        return await EventDocument.find_one(EventDocument.id == id).delete_one(
+        res = await EventDocument.find_one(EventDocument.id == id).delete_one(
             session=session
         )
+
+        if not res.deleted_count:
+            raise EventNotFound(f"Event with id {id} not found")
+
+        return res
 
     async def remove_guest_from_all_events(
         self,
@@ -72,7 +77,7 @@ class EventService:
         )
 
         if not res.matched_count:
-            raise EventNotFound(f"Event not found with id {event_id}")
+            raise EventNotFound(f"Event with id {event_id} not found")
 
         return res
 
@@ -87,7 +92,7 @@ class EventService:
         )
 
         if not res.matched_count:
-            raise EventNotFound(f"Event not found with id {event_id}")
+            raise EventNotFound(f"Event with id {event_id} not found")
 
         return res
 

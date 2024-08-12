@@ -14,13 +14,9 @@ logger = logging.getLogger(__name__)
 
 @router.get("", name="Get all events", response_model=list[EventDocument])
 async def get_all(event_service: CommonEventService):
-    try:
-        events = await event_service.get_all()
-        logger.info(f"Successfully fetched {len(events)} events")
-        return events
-    except Exception as e:
-        logger.error("Error while fetching all events")
-        raise e
+    events = await event_service.get_all()
+    logger.info(f"Successfully fetched {len(events)} events")
+    return events
 
 
 @router.get("/{event_id}", name="Get event by id", response_model=EventDocument)
@@ -38,10 +34,6 @@ async def get_event_by_id(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
-
-    except Exception as e:
-        logger.error(f"Error while fetching event with id {event_id}")
-        raise e
 
 
 @router.post("", name="Create event", response_model=EventDocument)
@@ -73,15 +65,9 @@ async def update_one_by_id(
 
         return {"id": str(event_id)}
 
-    except EventNotFound as _e:
-        logger.error(f"Event with id {event_id} not found")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
-        )
-
-    except Exception as e:
-        logger.error(f"Could not update event with id {event_id}")
-        raise e
+    except EventNotFound as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete("/{event_id}", name="Delete event")
@@ -98,11 +84,9 @@ async def delete(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Could not delete event",
             )
-    except EventNotFound as _e:
-        logger.error(f"Event with id {event_id} not found")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
-        )
+    except EventNotFound as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get("/{event_id}/guests")
