@@ -8,7 +8,7 @@ def setup_logger():
             "disable_existing_loggers": False,
             "formatters": {
                 "standard": {
-                    "format": "%(asctime)s - %(levelname)s - %(message)s",
+                    "format": "%(name)s at %(asctime)s - %(levelname)s - %(message)s",
                     "datefmt": "%HH:%MM:%SS",
                 }
             },
