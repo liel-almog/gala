@@ -1,4 +1,3 @@
-# guest_service.py
 from typing import Annotated
 
 from beanie import PydanticObjectId, UpdateResponse
