@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
 from app.api.errors.event_not_found import EventNotFound
-from app.api.models.event_model import EventDocument
+from app.api.models.event_model import EventDocument, EventOnlyWithGuests
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
 
@@ -65,6 +65,17 @@ class EventService:
         return await EventDocument.find_many({"guests._id": guest_id}).update_many(
             Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
         )
+
+    async def get_guests_by_event_id(self, event_id: PydanticObjectId):
+        guests = await EventDocument.find_one(
+            EventDocument.id == event_id,
+            projection_model=EventOnlyWithGuests,
+        )
+
+        if not guests:
+            raise EventNotFound(f"Event with id {event_id} not found")
+
+        return guests
 
     async def remove_guest_from_event(
         self,

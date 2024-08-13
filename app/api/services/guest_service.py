@@ -9,7 +9,7 @@ from pymongo.results import UpdateResult
 
 from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.event_model import EventDocument
-from app.api.models.guest_model import GuestDocument
+from app.api.models.guest_model import GuestDocument, GuestOnlyWithEvents
 from app.api.models.register_model import BasicRegistrationInfo
 
 
@@ -78,6 +78,17 @@ class GuestService:
             raise GuestNotFound(f"Guest with id {guest_id} not found")
 
         return res
+
+    async def get_events_by_guest_id(self, guest_id: PydanticObjectId):
+        events = await GuestDocument.find_one(
+            GuestDocument.id == guest_id,
+            projection_model=GuestOnlyWithEvents,
+        )
+
+        if not events:
+            raise GuestNotFound(f"Guest with id {guest_id} not found")
+
+        return events
 
     async def add_event_to_guest(
         self,

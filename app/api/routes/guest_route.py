@@ -92,6 +92,10 @@ async def delete(
 
 @router.get("/{guest_id}/events")
 async def get_events_by_guest_id(
-    guest_service: CommonGuestService, guest_id: Annotated[PydanticObjectId, Path()]
+    guest_id: Annotated[PydanticObjectId, Path()], guest_service: CommonGuestService
 ):
-    pass
+    try:
+        return await guest_service.get_events_by_guest_id(guest_id)
+    except GuestNotFound as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

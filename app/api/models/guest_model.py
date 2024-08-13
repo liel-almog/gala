@@ -22,3 +22,7 @@ class GuestDocument(Document, Guest):
 @partial_model()
 class PartialGuestDocument(GuestDocument):
     pass
+
+
+class GuestOnlyWithEvents(BaseModel):
+    events: list[BasicRegistrationInfo] | None = Field(default=[])

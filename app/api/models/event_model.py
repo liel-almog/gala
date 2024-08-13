@@ -26,3 +26,7 @@ class EventDocument(Document, Event):
 @partial_model()
 class PartialEventDocument(EventDocument):
     pass
+
+
+class EventOnlyWithGuests(BaseModel):
+    guests: list[BasicRegistrationInfo] | None = Field(default=[])
