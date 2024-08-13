@@ -31,6 +31,7 @@ async def registration(
             f"Successfully registered guest {registration.guest_id} to event {registration.event_id}"
         )
 
+        return {"message": "Successfully registered"}
     except GuestNotVipException as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
@@ -60,6 +61,7 @@ async def unregister(
             f"Successfully unregistered guest {unregister.guest_id} from event {unregister.event_id}"
         )
 
+        return {"message": "Successfully unregistered"}
     except GuestNotFound as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

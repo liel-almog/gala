@@ -4,7 +4,11 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, Body, HTTPException, Path, status
 
 from app.api.errors.guest_not_found import GuestNotFound
-from app.api.models.guest_model import GuestDocument, PartialGuestDocument
+from app.api.models.guest_model import (
+    GuestDocument,
+    GuestOnlyWithEvents,
+    PartialGuestDocument,
+)
 from app.api.services.guest_service import CommonGuestService
 from app.api.services.register_service import CommonRegisterService
 
@@ -17,6 +21,7 @@ logger = logging.getLogger(__name__)
 async def get_all(guest_service: CommonGuestService):
     guests = await guest_service.get_all()
     logger.info(f"Successfully fetched {len(guests)} guests")
+
     return guests
 
 
@@ -26,7 +31,6 @@ async def get_guest_by_id(
 ):
     try:
         guest = await guest_service.get_one_by_id(guest_id)
-
         logger.info(f"Fetched guest with id {guest_id}")
 
         return guest
@@ -41,6 +45,7 @@ async def create(
 ):
     created_guest = await guest_service.create(guest_to_insert)
     logger.info(f"Created guest with id {created_guest.id}")
+
     return created_guest
 
 
@@ -85,12 +90,17 @@ async def delete(
                 detail="Could not delete guest",
             )
 
+        return {"id": str(guest_id)}
     except GuestNotFound as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.get("/{guest_id}/events")
+@router.get(
+    "/{guest_id}/events",
+    response_model=GuestOnlyWithEvents,
+    name="Get events by guest id",
+)
 async def get_events_by_guest_id(
     guest_id: Annotated[PydanticObjectId, Path()], guest_service: CommonGuestService
 ):
