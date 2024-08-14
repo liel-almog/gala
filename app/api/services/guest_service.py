@@ -20,7 +20,7 @@ class GuestService:
         return await GuestDocument.find_all().to_list()
 
     async def get_one_by_id(self, id: PydanticObjectId):
-        guest = await GuestDocument.find_one(GuestDocument.id == id)
+        guest = await GuestDocument.get(id)
         if not guest:
             raise GuestNotFound(f"Guest with id {id} not found")
 

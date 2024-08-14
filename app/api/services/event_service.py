@@ -21,7 +21,7 @@ class EventService:
         return await EventDocument.find_all().to_list()
 
     async def get_one_by_id(self, id: PydanticObjectId):
-        event = await EventDocument.find_one(EventDocument.id == id)
+        event = await EventDocument.get(EventDocument.id == id)
         if not event:
             raise EventNotFound(f"Event with id {id} not found")
 
@@ -67,7 +67,7 @@ class EventService:
         )
 
     async def get_guests_by_event_id(self, event_id: PydanticObjectId):
-        guests = await EventDocument.find_one(
+        guests = await EventDocument.get(
             EventDocument.id == event_id,
             projection_model=EventOnlyWithGuests,
         )
