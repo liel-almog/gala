@@ -2,6 +2,8 @@ from enum import Enum, auto
 from beanie import Document
 from pydantic import BaseModel
 
+from app.core.utils.partial import partial_model
+
 
 class EventRoles(Enum):
     ORGANIZER = auto()
@@ -22,8 +24,17 @@ class Organizer(BaseModel):
     role: EventRoles
 
 
+@partial_model()
+class PartialOrganizer(Organizer):
+    pass
+
+
 class OrganizerDocument(Document, Organizer):
     pass
 
     class Settings:
         name = "organizers"
+
+
+class PartialOrganizerDocument(PartialOrganizer, OrganizerDocument):
+    pass
