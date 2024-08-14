@@ -5,9 +5,10 @@ from fastapi import APIRouter, Body, HTTPException, Path, status
 
 from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.guest_model import (
+    Guest,
     GuestDocument,
     GuestOnlyWithEvents,
-    PartialGuestDocument,
+    PartialGuest,
 )
 from app.api.services.guest_service import CommonGuestService
 from app.api.services.register_service import CommonRegisterService
@@ -41,7 +42,7 @@ async def get_guest_by_id(
 
 @router.post("", name="Create guest", response_model=GuestDocument)
 async def create(
-    guest_to_insert: Annotated[GuestDocument, Body()], guest_service: CommonGuestService
+    guest_to_insert: Annotated[Guest, Body()], guest_service: CommonGuestService
 ):
     created_guest = await guest_service.create(guest_to_insert)
     logger.info(f"Created guest with id {created_guest.id}")
@@ -52,7 +53,7 @@ async def create(
 @router.patch("/{guest_id}", name="Update guest")
 async def update_one_by_id(
     guest_id: Annotated[PydanticObjectId, Path()],
-    guest: Annotated[PartialGuestDocument, Body()],
+    guest: Annotated[PartialGuest, Body()],
     guest_service: CommonGuestService,
 ):
     try:

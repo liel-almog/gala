@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
 from app.api.errors.event_not_found import EventNotFound
-from app.api.models.event_model import EventDocument, EventOnlyWithGuests
+from app.api.models.event_model import Event, EventDocument, EventOnlyWithGuests
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
 
@@ -27,11 +27,12 @@ class EventService:
 
         return event
 
-    async def create(self, event: EventDocument):
-        return await EventDocument.insert_one(event)
+    async def create(self, event: Event):
+        event_document = EventDocument(**event.model_dump())
+        return await EventDocument.insert_one(event_document)
 
     async def update_one_by_id(
-        self, id: PydanticObjectId, event: EventDocument
+        self, id: PydanticObjectId, event: Event
     ) -> UpdateResult:
         event_dict = event.model_dump(exclude_unset=True, by_alias=True)
         res = await EventDocument.find_one(EventDocument.id == id).update_one(

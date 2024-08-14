@@ -16,6 +16,11 @@ class Event(BaseModel):
     is_vip_event: bool = Field(alias="isVipEvent", default=False)
 
 
+@partial_model()
+class PartialEvent(Event):
+    pass
+
+
 class EventDocument(Document, Event):
     pass
 
@@ -23,8 +28,8 @@ class EventDocument(Document, Event):
         name = "events"
 
 
-@partial_model()
-class PartialEventDocument(EventDocument):
+# Please keep notice that the order of inheritance is important
+class PartialEventDocument(PartialEvent, EventDocument):
     pass
 
 

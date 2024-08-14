@@ -8,7 +8,7 @@ from pymongo.results import UpdateResult
 
 from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.event_model import EventDocument
-from app.api.models.guest_model import GuestDocument, GuestOnlyWithEvents
+from app.api.models.guest_model import Guest, GuestDocument, GuestOnlyWithEvents
 from app.api.models.register_model import BasicRegistrationInfo
 
 
@@ -26,8 +26,9 @@ class GuestService:
 
         return guest
 
-    async def create(self, guest: GuestDocument):
-        return await GuestDocument.insert_one(guest)
+    async def create(self, guest: Guest):
+        guest_document = GuestDocument(**guest.model_dump())
+        return await GuestDocument.insert_one(guest_document)
 
     async def update_one_by_id(
         self, id: PydanticObjectId, guest: GuestDocument
