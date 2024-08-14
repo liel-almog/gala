@@ -25,6 +25,11 @@ class Guest(BaseModel):
         return v
 
 
+@partial_model()
+class PartialGuest(Guest):
+    pass
+
+
 class GuestDocument(Document, Guest):
     pass
 
@@ -32,8 +37,8 @@ class GuestDocument(Document, Guest):
         name = "guests"
 
 
-@partial_model()
-class PartialGuestDocument(GuestDocument):
+# Please keep notice that the order of inheritance is important
+class PartialGuestDocument(PartialGuest, GuestDocument):
     pass
 
 

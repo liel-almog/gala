@@ -5,9 +5,10 @@ from fastapi import APIRouter, Body, HTTPException, Path, status
 
 from app.api.errors.event_not_found import EventNotFound
 from app.api.models.event_model import (
+    Event,
     EventDocument,
     EventOnlyWithGuests,
-    PartialEventDocument,
+    PartialEvent,
 )
 from app.api.services.event_service import CommonEventService
 from app.api.services.register_service import CommonRegisterService
@@ -42,7 +43,7 @@ async def get_event_by_id(
 
 @router.post("", name="Create event", response_model=EventDocument)
 async def create(
-    event_to_insert: Annotated[EventDocument, Body()], event_service: CommonEventService
+    event_to_insert: Annotated[Event, Body()], event_service: CommonEventService
 ):
     created_event = await event_service.create(event_to_insert)
     logger.info(f"Created event with id {created_event.id}")
@@ -53,7 +54,7 @@ async def create(
 @router.patch("/{event_id}", name="Update event")
 async def update_one_by_id(
     event_id: Annotated[PydanticObjectId, Path()],
-    event: Annotated[PartialEventDocument, Body()],
+    event: Annotated[PartialEvent, Body()],
     event_service: CommonEventService,
 ):
     try:
