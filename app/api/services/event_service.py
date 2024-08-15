@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
 from app.api.errors.event_not_found import EventNotFound
-from app.api.models.event_model import Event, EventOnlyWithGuests
+from app.api.models.event_model import Event, EventOnlyWithGuests, PartialEvent
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
 from app.api.repositories.event_repository import CommonEventRepository, EventRepository
@@ -29,7 +29,7 @@ class EventService:
     async def create(self, event: Event):
         return await self._event_repository.create(event)
 
-    async def update_one_by_id(self, id: PydanticObjectId, event: ParitalEve):
+    async def update_one_by_id(self, id: PydanticObjectId, event: PartialEvent):
         return await self._event_repository.update_one_by_id(id, event)
 
     async def delete_one_by_id(
