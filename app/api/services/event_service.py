@@ -50,6 +50,13 @@ class EventService:
 
         return res
 
+    async def upldate_guest_name_by_id(
+        self, guest_id: PydanticObjectId, name: str
+    ) -> UpdateResult:
+        return await EventDocument.find_many({"guests._id": guest_id}).update_many(
+            Set({f"{EventDocument.guests}.$.{GuestDocument.name}": name})
+        )
+
     async def delete_one_by_id(
         self,
         id: PydanticObjectId,
