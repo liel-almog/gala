@@ -11,15 +11,10 @@ class Event(BaseModel):
     name: str
     dress_code: str = Field(alias="dressCode")
     location: str
-    guests: list[BasicRegistrationInfo] | None = Field(default=[])
+    guests: list[BasicRegistrationInfo] = Field(default=[])
     date: dt.datetime  # Date does not have be greater than today
     is_vip_event: bool = Field(alias="isVipEvent", default=False)
-    organizers: list[PydanticObjectId] | None = Field(default=[])
-
-
-@partial_model()
-class PartialEvent(Event):
-    pass
+    organizers: list[PydanticObjectId] = Field(default=[])
 
 
 @partial_model()
@@ -40,4 +35,4 @@ class PartialEventDocument(PartialEvent, EventDocument):
 
 
 class EventOnlyWithGuests(BaseModel):
-    guests: list[BasicRegistrationInfo] | None = Field(default=[])
+    guests: list[BasicRegistrationInfo] = Field(default=[])
