@@ -1,6 +1,6 @@
 from enum import Enum, auto
-from beanie import Document
-from pydantic import BaseModel
+from beanie import Document, PydanticObjectId
+from pydantic import BaseModel, Field
 
 from app.core.utils.partial import partial_model
 
@@ -22,6 +22,7 @@ class EventRoles(Enum):
 class Organizer(BaseModel):
     name: str
     role: EventRoles
+    events: list[PydanticObjectId] | None = Field(default=[])
 
 
 @partial_model()
