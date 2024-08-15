@@ -10,13 +10,7 @@ from app.api.models.organizer_model import Organizer, OrganizerDocument
 
 
 class OrganizerService:
-    def __init__(self) -> None:
-        from app.api.services.event_service import get_event_service
-
-        self._event_service = get_event_service()
-
     async def get_all(self):
-        a = await self._event_service.get_all()
         return await OrganizerDocument.find_all().to_list()
 
     async def get_by_id(self, organizer_id: PydanticObjectId):

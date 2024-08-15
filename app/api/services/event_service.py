@@ -10,19 +10,9 @@ from app.api.errors.event_not_found import EventNotFound
 from app.api.models.event_model import Event, EventDocument, EventOnlyWithGuests
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
-from app.core.db import CommonMongoClient
 
 
 class EventService:
-    def __init__(self, client) -> None:
-        from app.api.services.organizer_service import (
-            CommonOrganizerService,
-            OrganizerService,
-        )
-
-        self._client = client
-        self._organizer_service: OrganizerService = CommonOrganizerService
-
     async def get_all(self):
         return await EventDocument.find_all().to_list()
 
@@ -122,8 +112,8 @@ class EventService:
         return res
 
 
-def get_event_service(client: CommonMongoClient):
-    return EventService(client)
+def get_event_service():
+    return EventService()
 
 
 CommonEventService = Annotated[EventService, Depends(get_event_service, use_cache=True)]
