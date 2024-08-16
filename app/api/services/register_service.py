@@ -33,6 +33,7 @@ class RegisterService:
         self._event_service = event_service
         self._guest_service = guest_service
 
+    # TODO: Remove this function from this service and move to the guest service
     async def delete_guest(self, guest_id: PydanticObjectId):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
@@ -46,6 +47,7 @@ class RegisterService:
 
                 return (delete_guest, remove_guest_from_events)
 
+    # TODO: Remove this function from this service and move to the event service
     async def delete_event(self, event_id: PydanticObjectId):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
