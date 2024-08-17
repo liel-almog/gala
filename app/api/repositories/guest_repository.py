@@ -42,6 +42,18 @@ class GuestRepository:
 
         return res
 
+    async def delete_one_by_id(
+        self, id: PydanticObjectId, session: AsyncIOMotorClientSession | None = None
+    ):
+        res = await GuestDocument.find_one(GuestDocument.id == id).delete_one(
+            session=session
+        )
+
+        if not res.deleted_count:
+            raise GuestNotFound(f"Guest with id {id} not found")
+
+        return res
+
     async def remove_event_from_all_guests(
         self,
         event_id: PydanticObjectId,

@@ -1,12 +1,11 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from beanie.operators import Set, AddToSet
+from beanie.operators import Set
 from fastapi import Depends
-from motor.motor_asyncio import AsyncIOMotorClientSession
+from motor.motor_asyncio import AsyncIOMotorClientSession, AsyncIOMotorClient
 from pymongo.results import UpdateResult
 
-from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import (
     Guest,
@@ -14,14 +13,25 @@ from app.api.models.guest_model import (
     PartialGuest,
 )
 from app.api.models.register_model import BasicRegistrationInfo
+from app.api.repositories.event_repository import CommonEventRepository, EventRepository
 from app.api.repositories.guest_repository import CommonGuestRepository, GuestRepository
+from app.core.db import CommonMongoClient
 
 
 class GuestService:
     _guest_repository: GuestRepository
+    _event_repository: EventRepository
+    _client: AsyncIOMotorClient
 
-    def __init__(self, guest_repo: GuestRepository) -> None:
+    def __init__(
+        self,
+        client: AsyncIOMotorClient,
+        guest_repo: GuestRepository,
+        event_repo: EventRepository,
+    ) -> None:
         self._guest_repository = guest_repo
+        self._event_repository = event_repo
+        self._client = client
 
     async def get_all(self):
         return await self._guest_repository.find_all()
@@ -45,10 +55,19 @@ class GuestService:
         return await self._guest_repository.update_one_by_id(id, guest)
 
     # Use the guest repo and event repo
-    async def delete_one_by_id(
-        self, id: PydanticObjectId, session: AsyncIOMotorClientSession | None = None
-    ):
-        pass
+    async def delete_one_by_id(self, id: PydanticObjectId):
+        async with await self._client.start_session() as session:
+            async with session.start_transaction():
+                delete_guest = await self._guest_repository.delete_one_by_id(
+                    id, session=session
+                )
+                remove_guest_from_events = (
+                    await self._event_repository.remove_guest_from_all_events(
+                        id, session=session
+                    )
+                )
+
+                return (delete_guest, remove_guest_from_events)
 
     async def remove_event_from_all_guests(
         self,
@@ -83,8 +102,12 @@ class GuestService:
         )
 
 
-def get_guest_service(guest_repository: CommonGuestRepository):
-    return GuestService(guest_repository)
+def get_guest_service(
+    guest_repository: CommonGuestRepository,
+    event_repository: CommonEventRepository,
+    client: CommonMongoClient,
+):
+    return GuestService(client, guest_repository, event_repository)
 
 
 CommonGuestService = Annotated[GuestService, Depends(get_guest_service, use_cache=True)]

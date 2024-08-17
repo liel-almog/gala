@@ -11,7 +11,6 @@ from app.api.models.guest_model import (
     PartialGuest,
 )
 from app.api.services.guest_service import CommonGuestService
-from app.api.services.register_service import CommonRegisterService
 
 
 router = APIRouter()
@@ -79,17 +78,10 @@ async def update_one_by_id(
 @router.delete("/{guest_id}")
 async def delete(
     guest_id: Annotated[PydanticObjectId, Path()],
-    register_service: CommonRegisterService,
+    guest_service: CommonGuestService,
 ):
     try:
-        [del_res] = await register_service.delete_guest(guest_id)
-
-        if not del_res.acknowledged:
-            logger.error(f"Error while deleting guest with id {guest_id}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Could not delete guest",
-            )
+        await guest_service.delete_one_by_id(guest_id)
 
         return {"id": str(guest_id)}
     except GuestNotFound as e:
