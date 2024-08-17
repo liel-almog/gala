@@ -48,7 +48,9 @@ class EventRepository:
     async def delete_one_by_id(
         self, id: PydanticObjectId, session: AsyncIOMotorClientSession
     ) -> UpdateResult:
-        res = await EventDocument.find_one(Event.id == id).delete_one(session=session)
+        res = await EventDocument.find_one(EventDocument.id == id).delete_one(
+            session=session
+        )
 
         if not res.deleted_count:
             raise EventNotFound(f"Event with id {id} not found")

@@ -1,11 +1,9 @@
 from asyncio import gather
 from typing import Annotated
 
-from beanie import PydanticObjectId
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.api.errors.event_not_found import EventNotFound
 from app.api.errors.guest_not_vip import GuestNotVipException
 from app.api.models.register_model import (
     BasicRegistrationInfo,
@@ -31,20 +29,6 @@ class RegisterService:
         self._client = client
         self._event_service = event_service
         self._guest_service = guest_service
-
-    # TODO: Remove this function from this service and move to the event service
-    async def delete_event(self, event_id: PydanticObjectId):
-        async with await self._client.start_session() as session:
-            async with session.start_transaction():
-                delete_event = await self._event_service.delete_one_by_id(event_id)
-                remove_event_from_guests = await (
-                    self._guest_service.remove_event_from_all_guests(event_id)
-                )
-
-                if not delete_event.deleted_count:
-                    raise EventNotFound(f"Event with id {event_id} not found")
-
-                return (delete_event, remove_event_from_guests)
 
     async def register(self, registration: Registration):
         event = await self._event_service.get_one_by_id(registration.event_id)
