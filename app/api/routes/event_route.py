@@ -10,7 +10,6 @@ from app.api.models.event_model import (
     PartialEventDocument,
 )
 from app.api.services.event_service import CommonEventService
-from app.api.services.register_service import CommonRegisterService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -76,17 +75,10 @@ async def update_one_by_id(
 @router.delete("/{event_id}", name="Delete event")
 async def delete(
     event_id: Annotated[PydanticObjectId, Path()],
-    register_service: CommonRegisterService,
+    event_service: CommonEventService,
 ):
     try:
-        [del_res] = await register_service.delete_event(event_id)
-
-        if not del_res.acknowledged:
-            logger.error(f"Could not delete event with id {event_id}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Could not delete event",
-            )
+        await event_service.delete_one_by_id(event_id)
 
         return {"id": str(event_id)}
     except EventNotFound as e:
