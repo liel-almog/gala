@@ -12,16 +12,16 @@ class Guest(BaseModel):
     age: int = Field(ge=18)
 
 
+@partial_model()
+class PartialGuest(Guest):
+    pass
+
+
 class GuestDocument(Document, Guest):
     pass
 
     class Settings:
         name = "guests"
-
-
-@partial_model()
-class PartialGuestDocument(GuestDocument):
-    pass
 
 
 class GuestOnlyWithEvents(BaseModel):

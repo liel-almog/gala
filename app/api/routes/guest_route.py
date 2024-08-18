@@ -7,7 +7,7 @@ from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.guest_model import (
     GuestDocument,
     GuestOnlyWithEvents,
-    PartialGuestDocument,
+    PartialGuest,
 )
 from app.api.services.guest_service import CommonGuestService
 
@@ -51,7 +51,7 @@ async def create(
 @router.patch("/{guest_id}", name="Update guest")
 async def update_one_by_id(
     guest_id: Annotated[PydanticObjectId, Path()],
-    guest: Annotated[PartialGuestDocument, Body()],
+    guest: Annotated[PartialGuest, Body()],
     guest_service: CommonGuestService,
 ):
     try:
