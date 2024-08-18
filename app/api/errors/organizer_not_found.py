@@ -1,2 +1,0 @@
-class OrganizerNotFound(Exception):
-    pass
