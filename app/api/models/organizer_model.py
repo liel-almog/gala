@@ -1,27 +1,27 @@
-from enum import Enum, auto
+from enum import Enum
 from beanie import Document
 from pydantic import BaseModel
 
 from app.core.utils.partial import partial_model
 
 
-class EventRoles(Enum):
-    ORGANIZER = auto()
-    DJ = auto()
-    PHOTOGRAPHER = auto()
-    BARTENDER = auto()
-    SECURITY = auto()
-    WAITER = auto()
-    CLEANER = auto()
-    CATERER = auto()
-    HOST = auto()
-    PERFORMER = auto()
-    MANAGER = auto()
+class OrganizerRoles(str, Enum):
+    ORGANIZER = "Organizer"
+    DJ = "DJ"
+    PHOTOGRAPHER = "PhotoGrapher"
+    BARTENDER = "Bartender"
+    SECURITY = "Security"
+    WAITER = "Waiter"
+    CLEANER = "Cleaner"
+    CATERER = "Caterer"
+    HOST = "Host"
+    PERFORMER = "Performer"
+    MANAGER = "Manager"
 
 
 class Organizer(BaseModel):
     name: str
-    role: EventRoles
+    role: OrganizerRoles
 
 
 @partial_model()
