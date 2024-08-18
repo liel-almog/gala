@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId, UpdateResponse
-from beanie.operators import Set, Pull
+from beanie.operators import Set, Pull, AddToSet
 from fastapi import Depends
 from pymongo.results import UpdateResult
 from motor.motor_asyncio import AsyncIOMotorClientSession
@@ -98,7 +98,7 @@ class EventRepository:
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
         res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
-            Set({EventDocument.guests: guest_basic_info}), session=session
+            AddToSet({EventDocument.guests: guest_basic_info}), session=session
         )
 
         if not res.matched_count:
