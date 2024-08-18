@@ -54,7 +54,6 @@ class GuestService:
     ) -> UpdateResult:
         return await self._guest_repository.update_one_by_id(id, guest)
 
-    # Use the guest repo and event repo
     async def delete_one_by_id(self, id: PydanticObjectId):
         async with await self._client.start_session() as session:
             async with session.start_transaction():
