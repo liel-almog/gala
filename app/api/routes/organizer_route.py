@@ -76,6 +76,16 @@ async def get_events_by_organizer_id(
     return events
 
 
-@router.delete("/{organizer_id}")
-async def delete():
-    pass
+@router.delete("/{organizer_id}", name="Delete organizer")
+async def delete(
+    organizer_id: Annotated[PydanticObjectId, Path()],
+    organizer_service: CommonOrganizerService,
+):
+    try:
+        await organizer_service.delete_one_by_id(organizer_id)
+        logger.info(f"Deleted organizer with id {organizer_id}")
+
+        return {"id": str(organizer_id)}
+    except OrganizerNotFound as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

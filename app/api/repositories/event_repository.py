@@ -121,20 +121,14 @@ class EventRepository:
 
         return res
 
-    async def remove_organizer_from_event(
+    async def remove_organizer_from_all_events(
         self,
-        event_id: PydanticObjectId,
         organizer_id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
-        res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
-            Pull({EventDocument.organizers: organizer_id}), session=session
-        )
-
-        if not res.matched_count:
-            raise EventNotFound(f"Event with id {event_id} not found")
-
-        return res
+        return await EventDocument.find_many(
+            EventDocument.organizers == organizer_id
+        ).update_many(Pull({EventDocument.organizers: organizer_id}), session=session)
 
     async def find_events_by_organizer_id(self, organizer_id: PydanticObjectId):
         return await EventDocument.find_many(

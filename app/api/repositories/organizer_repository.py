@@ -3,6 +3,7 @@ from typing import Annotated
 from beanie import PydanticObjectId, UpdateResponse
 from beanie.operators import Set
 from fastapi import Depends
+from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
 from app.api.errors.organizer_not_found import OrganizerNotFound
@@ -41,8 +42,12 @@ class OrganizerRepository:
 
         return res
 
-    async def delete_one_by_id(self, id: PydanticObjectId):
-        res = await OrganizerDocument.find_one(OrganizerDocument.id == id).delete_one()
+    async def delete_one_by_id(
+        self, id: PydanticObjectId, session: AsyncIOMotorClientSession
+    ):
+        res = await OrganizerDocument.find_one(OrganizerDocument.id == id).delete_one(
+            session=session
+        )
 
         if not res.deleted_count:
             raise OrganizerNotFound(f"Organizer with id {id} not found")
