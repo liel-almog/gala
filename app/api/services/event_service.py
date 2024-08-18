@@ -36,7 +36,9 @@ class EventService:
     async def create(self, event: Event):
         return await self._event_repository.create(event)
 
-    async def update_one_by_id(self, id: PydanticObjectId, event: PartialEvent):
+    async def update_one_by_id(
+        self, id: PydanticObjectId, event: PartialEvent
+    ) -> UpdateResult:
         return await self._event_repository.update_one_by_id(id, event)
 
     async def delete_one_by_id(

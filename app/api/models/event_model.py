@@ -29,8 +29,8 @@ class EventDocument(Document, Event):
         name = "events"
 
 
-# Please keep notice that the order of inheritance is important
-class PartialEventDocument(PartialEvent, EventDocument):
+@partial_model()
+class PartialEventDocument(EventDocument):
     pass
 
 
