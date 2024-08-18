@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId, UpdateResponse
-from beanie.operators import Set, Pull, AddToSet
+from beanie.operators import AddToSet, Pull, Set
 from fastapi import Depends
-from pymongo.results import UpdateResult
 from motor.motor_asyncio import AsyncIOMotorClientSession
+from pymongo.results import UpdateResult
 
 from app.api.errors.event_not_found import EventNotFound
 from app.api.models.event_model import (
@@ -105,6 +105,41 @@ class EventRepository:
             raise EventNotFound(f"Event with id {event_id} not found")
 
         return res
+
+    async def add_organizer_to_event(
+        self,
+        event_id: PydanticObjectId,
+        organizer_id: PydanticObjectId,
+        session: AsyncIOMotorClientSession | None = None,
+    ) -> UpdateResult:
+        res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
+            AddToSet({EventDocument.organizers: organizer_id}), session=session
+        )
+
+        if not res.matched_count:
+            raise EventNotFound(f"Event with id {event_id} not found")
+
+        return res
+
+    async def remove_organizer_from_event(
+        self,
+        event_id: PydanticObjectId,
+        organizer_id: PydanticObjectId,
+        session: AsyncIOMotorClientSession | None = None,
+    ) -> UpdateResult:
+        res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
+            Pull({EventDocument.organizers: organizer_id}), session=session
+        )
+
+        if not res.matched_count:
+            raise EventNotFound(f"Event with id {event_id} not found")
+
+        return res
+
+    async def find_events_by_organizer_id(self, organizer_id: PydanticObjectId):
+        return await EventDocument.find_many(
+            EventDocument.organizers == organizer_id,
+        ).to_list()
 
 
 def get_event_repository() -> EventRepository:

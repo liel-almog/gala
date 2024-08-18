@@ -65,6 +65,17 @@ async def update(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+@router.get("/{organizer_id}/events", name="Get events by organizer id")
+async def get_events_by_organizer_id(
+    organizer_id: Annotated[PydanticObjectId, Path()],
+    organizer_service: CommonOrganizerService,
+):
+    events = await organizer_service.get_events_by_organizer_id(organizer_id)
+    logger.info(f"Fetch {len(events)} events by organizer id {organizer_id}")
+
+    return events
+
+
 @router.delete("/{organizer_id}")
 async def delete():
     pass

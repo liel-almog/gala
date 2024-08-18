@@ -4,6 +4,7 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, Body, HTTPException, Path, status
 
 from app.api.errors.event_not_found import EventNotFound
+from app.api.errors.organizer_not_found import OrganizerNotFound
 from app.api.models.event_model import (
     EventDocument,
     EventOnlyWithGuests,
@@ -97,5 +98,22 @@ async def get_guests_by_event_id(
     try:
         return await event_service.get_guests_by_event_id(event_id)
     except EventNotFound as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/{event_id}/organizers/{organizer_id}", name="Add organizer to event")
+async def add_organizer_to_event(
+    event_id: Annotated[PydanticObjectId, Path()],
+    organizer_id: Annotated[PydanticObjectId, Path()],
+    event_service: CommonEventService,
+):
+    try:
+        await event_service.add_organizer_to_event(event_id, organizer_id)
+        return {"id": str(organizer_id)}
+    except EventNotFound as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except OrganizerNotFound as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

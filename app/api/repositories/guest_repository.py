@@ -1,9 +1,10 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId, UpdateResponse
-from beanie.operators import Pull, Set, AddToSet
+from beanie.operators import AddToSet, Pull, Set
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClientSession
+from pymongo.results import UpdateResult
 
 from app.api.errors.guest_not_found import GuestNotFound
 from app.api.models.event_model import EventDocument
@@ -68,9 +69,11 @@ class GuestRepository:
         guest_id: PydanticObjectId,
         event_id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
-    ):
+    ) -> UpdateResult:
         res = await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
-            Pull({GuestDocument.events: {EventDocument.id: event_id}}), session=session
+            Pull({GuestDocument.events: {EventDocument.id: event_id}}),
+            session=session,
+            response_type=UpdateResponse.UPDATE_RESULT,
         )
 
         if not res.matched_count:

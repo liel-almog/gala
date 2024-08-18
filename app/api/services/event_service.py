@@ -9,12 +9,17 @@ from app.api.models.event_model import Event, PartialEvent
 from app.api.models.register_model import BasicRegistrationInfo
 from app.api.repositories.event_repository import CommonEventRepository, EventRepository
 from app.api.repositories.guest_repository import CommonGuestRepository, GuestRepository
+from app.api.repositories.organizer_repository import (
+    CommonOrganizerRepository,
+    OrganizerRepository,
+)
 from app.core.db import CommonMongoClient
 
 
 class EventService:
     _event_repository: EventRepository
     _guest_repository: GuestRepository
+    _organizer_repository: OrganizerRepository
     _client: AsyncIOMotorClient
 
     def __init__(
@@ -22,10 +27,12 @@ class EventService:
         client: AsyncIOMotorClient,
         event_repo: EventRepository,
         guest_repo: GuestRepository,
+        organizer_repo: OrganizerRepository,
     ) -> None:
+        self._client = client
         self._event_repository = event_repo
         self._guest_repository = guest_repo
-        self._client = client
+        self._organizer_repository = organizer_repo
 
     async def get_all(self):
         return await self._event_repository.find_all()
@@ -90,13 +97,26 @@ class EventService:
             event_id, guest_basic_info, session=session
         )
 
+    async def add_organizer_to_event(
+        self,
+        event_id: PydanticObjectId,
+        organizer_id: PydanticObjectId,
+        session: AsyncIOMotorClientSession | None = None,
+    ) -> UpdateResult:
+        await self._organizer_repository.find_one_by_id(organizer_id)
+
+        return await self._event_repository.add_organizer_to_event(
+            event_id, organizer_id, session=session
+        )
+
 
 def get_event_service(
+    client: CommonMongoClient,
     event_repo: CommonEventRepository,
     guest_repo: CommonGuestRepository,
-    client: CommonMongoClient,
+    organizer_repo: CommonOrganizerRepository,
 ):
-    return EventService(client, event_repo, guest_repo)
+    return EventService(client, event_repo, guest_repo, organizer_repo)
 
 
 CommonEventService = Annotated[EventService, Depends(get_event_service, use_cache=True)]
