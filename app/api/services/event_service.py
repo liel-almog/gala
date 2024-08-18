@@ -8,49 +8,36 @@ from motor.motor_asyncio import AsyncIOMotorClientSession
 from pymongo.results import UpdateResult
 
 from app.api.errors.event_not_found import EventNotFound
-from app.api.models.event_model import EventDocument, EventOnlyWithGuests
+from app.api.models.event_model import Event, EventOnlyWithGuests, PartialEvent
 from app.api.models.guest_model import GuestDocument
 from app.api.models.register_model import BasicRegistrationInfo
+from app.api.repositories.event_repository import CommonEventRepository, EventRepository
 
 
 class EventService:
-    def __init__(self) -> None:
-        pass
+    _event_repository: EventRepository
+
+    def __init__(self, event_repo: EventRepository) -> None:
+        self._event_repository = event_repo
 
     async def get_all(self):
-        return await EventDocument.find_all().to_list()
+        return await self._event_repository.find_all()
 
     async def get_one_by_id(self, id: PydanticObjectId):
-        event = await EventDocument.find_one(EventDocument.id == id)
-        if not event:
-            raise EventNotFound(f"Event with id {id} not found")
+        return self._event_repository.find_one_by_id(id)
 
-        return event
+    async def create(self, event: Event):
+        return await self._event_repository.create(event)
 
-    async def create(self, event: EventDocument):
-        return await EventDocument.insert_one(event)
-
-    async def update_one_by_id(
-        self, id: PydanticObjectId, event: EventDocument
-    ) -> UpdateResult:
-        event_dict = event.model_dump(exclude_unset=True, by_alias=True)
-        res = await EventDocument.find_one(EventDocument.id == id).update_one(
-            Set(event_dict), response_type=UpdateResponse.UPDATE_RESULT
-        )
-
-        if not res.matched_count:
-            raise EventNotFound(f"Event with id {id} not found")
-
-        return res
+    async def update_one_by_id(self, id: PydanticObjectId, event: PartialEvent):
+        return await self._event_repository.update_one_by_id(id, event)
 
     async def delete_one_by_id(
         self,
         id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ):
-        res = await EventDocument.find_one(EventDocument.id == id).delete_one(
-            session=session
-        )
+        res = await Event.find_one(Event.id == id).delete_one(session=session)
 
         if not res.deleted_count:
             raise EventNotFound(f"Event with id {id} not found")
@@ -62,13 +49,13 @@ class EventService:
         guest_id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ):
-        return await EventDocument.find_many({"guests._id": guest_id}).update_many(
-            Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
+        return await Event.find_many({"guests._id": guest_id}).update_many(
+            Pull({Event.guests: {GuestDocument.id: guest_id}}), session=session
         )
 
     async def get_guests_by_event_id(self, event_id: PydanticObjectId):
-        guests = await EventDocument.find_one(
-            EventDocument.id == event_id,
+        guests = await Event.find_one(
+            Event.id == event_id,
             projection_model=EventOnlyWithGuests,
         )
 
@@ -83,8 +70,8 @@ class EventService:
         guest_id: PydanticObjectId,
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
-        res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
-            Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
+        res = await Event.find_one(Event.id == event_id).update_one(
+            Pull({Event.guests: {GuestDocument.id: guest_id}}), session=session
         )
 
         if not res.matched_count:
@@ -98,8 +85,8 @@ class EventService:
         guest_basic_info: BasicRegistrationInfo,
         session: AsyncIOMotorClientSession | None = None,
     ) -> UpdateResult:
-        res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
-            AddToSet({EventDocument.guests: guest_basic_info}), session=session
+        res = await Event.find_one(Event.id == event_id).update_one(
+            AddToSet({Event.guests: guest_basic_info}), session=session
         )
 
         if not res.matched_count:
@@ -108,8 +95,8 @@ class EventService:
         return res
 
 
-def get_event_service():
-    return EventService()
+def get_event_service(event_repo: CommonEventRepository):
+    return EventService(event_repo)
 
 
 CommonEventService = Annotated[EventService, Depends(get_event_service, use_cache=True)]

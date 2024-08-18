@@ -1,6 +1,7 @@
+# https://github.com/pydantic/pydantic/issues/1673
 from copy import deepcopy
 from dataclasses import asdict
-from typing import Any, Callable, Optional, Type, TypeVar, ClassVar
+from typing import Any, Callable, ClassVar, Optional, Type, TypeVar
 
 from pydantic import BaseModel, create_model
 from pydantic.fields import FieldInfo

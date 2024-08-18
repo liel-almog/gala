@@ -1,6 +1,6 @@
 import datetime as dt
 
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 
 from app.api.models.register_model import BasicRegistrationInfo
@@ -14,6 +14,17 @@ class Event(BaseModel):
     guests: list[BasicRegistrationInfo] | None = Field(default=[])
     date: dt.datetime  # Date does not have be greater than today
     is_vip_event: bool = Field(alias="isVipEvent", default=False)
+    organizers: list[PydanticObjectId] | None = Field(default=[])
+
+
+@partial_model()
+class PartialEvent(Event):
+    pass
+
+
+@partial_model()
+class PartialEvent(Event):
+    pass
 
 
 class EventDocument(Document, Event):
@@ -23,8 +34,8 @@ class EventDocument(Document, Event):
         name = "events"
 
 
-@partial_model()
-class PartialEventDocument(EventDocument):
+# Please keep notice that the order of inheritance is important
+class PartialEventDocument(PartialEvent, EventDocument):
     pass
 
 
