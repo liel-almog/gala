@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongo:
     image: mongo:latest
@@ -14,21 +12,48 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
 
+  kafka-server:
+    image: docker.io/bitnami/kafka:3.6
+    ports:
+      - "29092:29092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092,EXTERNAL://localhost:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    hostname: kafka
+    networks:
+      - app-tier
+
+  kafka-ui:
+    image: docker.io/provectuslabs/kafka-ui:latest
+    ports:
+      - "8000:8080"
+    environment:
+      - DYNAMIC_CONFIG_ENABLED=true
+    networks:
+      - app-tier
   backend:
     build:
       context: .
-      dockerfile: docker/Dockerfile.local
-    command: ./scripts/docker-entrypoint.sh
-    volumes:
-      - ./app:/usr/src/app
+      dockerfile: Dockerfile
     ports:
-      - 8080:8080
-    depends_on:
-      mongo:
-        condition: service_healthy
-    links:
-      - mongo
+      - 8080:80
 
 volumes:
   mongo-data:
     driver: local
+  kafka_data:
+    driver: local
+
+networks:
+  app-tier:
+    driver: bridge
