@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from beanie import PydanticObjectId
 from fastapi import Depends
@@ -68,7 +68,7 @@ class EventService:
     async def remove_guest_from_all_events(
         self,
         guest_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ):
         return await self._event_repository.remove_guest_from_all_events(
             guest_id, session=session
@@ -78,7 +78,7 @@ class EventService:
         self,
         event_id: PydanticObjectId,
         guest_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await self._event_repository.remove_guest_from_event(
             event_id, guest_id, session=session
@@ -91,7 +91,7 @@ class EventService:
         self,
         event_id: PydanticObjectId,
         guest_basic_info: BasicRegistrationInfo,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await self._event_repository.add_guest_to_event(
             event_id, guest_basic_info, session=session
@@ -101,7 +101,7 @@ class EventService:
         self,
         event_id: PydanticObjectId,
         organizer_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         await self._organizer_repository.find_one_by_id(organizer_id)
 

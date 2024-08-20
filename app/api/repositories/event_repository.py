@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from beanie import PydanticObjectId, UpdateResponse
 from beanie.operators import AddToSet, Pull, Set
@@ -60,7 +60,7 @@ class EventRepository:
     async def remove_guest_from_all_events(
         self,
         guest_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ):
         return await EventDocument.find_many({"guests._id": guest_id}).update_many(
             Pull({EventDocument.guests: {GuestDocument.id: guest_id}}),
@@ -71,7 +71,7 @@ class EventRepository:
         self,
         event_id: PydanticObjectId,
         guest_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
             Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
@@ -95,7 +95,7 @@ class EventRepository:
         self,
         event_id: PydanticObjectId,
         guest_basic_info: BasicRegistrationInfo,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
             AddToSet({EventDocument.guests: guest_basic_info}), session=session
@@ -110,7 +110,7 @@ class EventRepository:
         self,
         event_id: PydanticObjectId,
         organizer_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
             AddToSet({EventDocument.organizers: organizer_id}), session=session
@@ -124,7 +124,7 @@ class EventRepository:
     async def remove_organizer_from_all_events(
         self,
         organizer_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await EventDocument.find_many(
             EventDocument.organizers == organizer_id

@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from beanie import PydanticObjectId, UpdateResponse
 from beanie.operators import AddToSet, Pull, Set
@@ -44,7 +44,7 @@ class GuestRepository:
         return res
 
     async def delete_one_by_id(
-        self, id: PydanticObjectId, session: AsyncIOMotorClientSession | None = None
+        self, id: PydanticObjectId, session: Optional[AsyncIOMotorClientSession] = None
     ):
         res = await GuestDocument.find_one(GuestDocument.id == id).delete_one(
             session=session
@@ -58,7 +58,7 @@ class GuestRepository:
     async def remove_event_from_all_guests(
         self,
         event_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ):
         return await GuestDocument.find_many({"events._id": event_id}).update_many(
             Pull({GuestDocument.events: {EventDocument.id: event_id}}), session=session
@@ -68,7 +68,7 @@ class GuestRepository:
         self,
         guest_id: PydanticObjectId,
         event_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         res = await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
             Pull({GuestDocument.events: {EventDocument.id: event_id}}),
@@ -96,7 +96,7 @@ class GuestRepository:
         self,
         guest_id: PydanticObjectId,
         event_basic_info: BasicRegistrationInfo,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ):
         res = await GuestDocument.find_one(GuestDocument.id == guest_id).update_one(
             AddToSet({GuestDocument.events: event_basic_info}), session=session

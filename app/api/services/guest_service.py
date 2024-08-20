@@ -1,5 +1,5 @@
 # guest_service.py
-from typing import Annotated
+from typing import Annotated, Optional
 
 from beanie import PydanticObjectId
 from beanie.operators import Set
@@ -72,7 +72,7 @@ class GuestService:
     async def remove_event_from_all_guests(
         self,
         event_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await self._guest_repository.remove_event_from_all_guests(
             event_id, session=session
@@ -82,7 +82,7 @@ class GuestService:
         self,
         guest_id: PydanticObjectId,
         event_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await self._guest_repository.remove_event_from_guest(
             guest_id, event_id, session=session
@@ -95,7 +95,7 @@ class GuestService:
         self,
         guest_id: PydanticObjectId,
         event_basic_info: BasicRegistrationInfo,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         self._guest_repository.add_event_to_guest(
             guest_id, event_basic_info, session=session
