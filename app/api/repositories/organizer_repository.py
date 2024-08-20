@@ -4,7 +4,7 @@ from beanie import PydanticObjectId, UpdateResponse
 from beanie.operators import Set
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClientSession
-from pymongo.results import UpdateResult
+from pymongo.results import UpdateResult, DeleteResult
 
 from app.api.errors.organizer_not_found import OrganizerNotFound
 from app.api.models.organizer_model import (
@@ -15,17 +15,17 @@ from app.api.models.organizer_model import (
 
 
 class OrganizerRepository:
-    async def find_all(self):
+    async def find_all(self) -> list[OrganizerDocument]:
         return await OrganizerDocument.find_all().to_list()
 
-    async def find_one_by_id(self, id: PydanticObjectId):
+    async def find_one_by_id(self, id: PydanticObjectId) -> OrganizerDocument:
         organizer = await OrganizerDocument.get(id)
         if not organizer:
             raise OrganizerNotFound(f"Organizer with id {id} not found")
 
         return organizer
 
-    async def create(self, organizer: Organizer):
+    async def create(self, organizer: Organizer) -> OrganizerDocument:
         organizer_to_insert = OrganizerDocument(**organizer.model_dump())
         return await organizer_to_insert.save()
 
@@ -44,7 +44,7 @@ class OrganizerRepository:
 
     async def delete_one_by_id(
         self, id: PydanticObjectId, session: AsyncIOMotorClientSession
-    ):
+    ) -> DeleteResult:
         res = await OrganizerDocument.find_one(OrganizerDocument.id == id).delete_one(
             session=session
         )

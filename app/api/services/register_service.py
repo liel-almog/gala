@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.results import UpdateResult
 
 from app.api.errors.guest_not_vip import GuestNotVipException
 from app.api.models.register_model import (
@@ -33,7 +34,9 @@ class RegisterService:
         self._event_repository = event_repository
         self._guest_repository = guest_service
 
-    async def register(self, registration: Registration):
+    async def register(
+        self, registration: Registration
+    ) -> tuple[UpdateResult, UpdateResult]:
         event = await self._event_repository.find_one_by_id(registration.event_id)
 
         # No need to fetch the guest if the event is not VIP
@@ -57,7 +60,9 @@ class RegisterService:
 
                 return await gather(*(add_event_to_guest_task, add_guest_to_event_task))
 
-    async def unregister(self, unregister: UnRegistraion):
+    async def unregister(
+        self, unregister: UnRegistraion
+    ) -> tuple[UpdateResult, UpdateResult]:
         async with await self._client.start_session() as session:
             async with session.start_transaction():
                 remove_event_from_guest = await (

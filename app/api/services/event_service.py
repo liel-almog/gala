@@ -3,9 +3,14 @@ from typing import Annotated, Optional
 from beanie import PydanticObjectId
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClientSession, AsyncIOMotorClient
-from pymongo.results import UpdateResult
+from pymongo.results import UpdateResult, DeleteResult
 
-from app.api.models.event_model import Event, PartialEvent
+from app.api.models.event_model import (
+    Event,
+    EventDocument,
+    EventOnlyWithGuests,
+    PartialEvent,
+)
 from app.api.models.register_model import BasicRegistrationInfo
 from app.api.repositories.event_repository import CommonEventRepository, EventRepository
 from app.api.repositories.guest_repository import CommonGuestRepository, GuestRepository
@@ -34,13 +39,13 @@ class EventService:
         self._guest_repository = guest_repo
         self._organizer_repository = organizer_repo
 
-    async def get_all(self):
+    async def get_all(self) -> list[EventDocument]:
         return await self._event_repository.find_all()
 
-    async def get_one_by_id(self, id: PydanticObjectId):
+    async def get_one_by_id(self, id: PydanticObjectId) -> EventDocument:
         return await self._event_repository.find_one_by_id(id)
 
-    async def create(self, event: Event):
+    async def create(self, event: Event) -> EventDocument:
         return await self._event_repository.create(event)
 
     async def update_one_by_id(
@@ -51,7 +56,7 @@ class EventService:
     async def delete_one_by_id(
         self,
         id: PydanticObjectId,
-    ):
+    ) -> tuple[DeleteResult, UpdateResult]:
         async with await self._client.start_session() as session:
             async with session.start_transaction():
                 delete_event = await self._event_repository.delete_one_by_id(
@@ -69,7 +74,7 @@ class EventService:
         self,
         guest_id: PydanticObjectId,
         session: Optional[AsyncIOMotorClientSession] = None,
-    ):
+    ) -> UpdateResult:
         return await self._event_repository.remove_guest_from_all_events(
             guest_id, session=session
         )
@@ -84,7 +89,9 @@ class EventService:
             event_id, guest_id, session=session
         )
 
-    async def get_guests_by_event_id(self, event_id: PydanticObjectId):
+    async def get_guests_by_event_id(
+        self, event_id: PydanticObjectId
+    ) -> EventOnlyWithGuests:
         return await self._event_repository.find_guests_by_event_id(event_id)
 
     async def add_guest_to_event(
