@@ -1,8 +1,11 @@
-import time
+import asyncio
+import logging
 from kafka import KafkaConsumer
 from kafka.errors import KafkaError
 from kafka.consumer.fetcher import ConsumerRecord
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 MIN_COMMIT_COUNT = 10
 TOPICS = ["vip_custom_request"]
@@ -11,22 +14,22 @@ CONSUMER_GROUP = "vip_custom_requests_group"
 running = True
 
 
-def msg_process(msg: ConsumerRecord):
-    time.sleep(3)
-    print(f"Process message: {msg.key}: {msg.value}")
+async def msg_process(msg: ConsumerRecord):
+    await asyncio.sleep(3)
 
 
-def consume_loop(consumer: KafkaConsumer):
+# To use really asyncronous code with kafka we could look at https://github.com/aio-libs/aiokafka
+async def consume_loop(consumer: KafkaConsumer):
     msg_count = 0
     try:
         while running:
             # the msg is a ConsumerRecord object as defined in kafka-python docs
-            # https://github.com/wbarnha/kafka-python-ng?tab=readme-ov-file#kafkaconsumer
+            # https://github.com/wbarn  ha/kafka-python-ng?tab=readme-ov-file#kafkaconsumer
             for msg in consumer:
-                msg_process(msg)
+                await msg_process(msg)
                 msg_count += 1
                 if msg_count % MIN_COMMIT_COUNT == 0:
-                    consumer.commit()
+                    await consumer.commit_async()
 
     except KafkaError as e:
         print(f"KafkaError: {e}")
@@ -35,7 +38,7 @@ def consume_loop(consumer: KafkaConsumer):
         consumer.close()
 
 
-def main():
+async def start_consumer():
     consumer = KafkaConsumer(
         *TOPICS,
         bootstrap_servers=settings.KAFKA_BROKERS,
@@ -43,8 +46,6 @@ def main():
         auto_offset_reset="earliest",
     )
 
-    consume_loop(consumer)
+    logger.info("Consumer started")
 
-
-if __name__ == "__main__":
-    main()
+    await consume_loop(consumer)
