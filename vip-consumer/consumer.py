@@ -1,9 +1,16 @@
 import asyncio
+import json
 import logging
+
+from beanie import UpdateResponse
+from beanie.operators import Set
+from pymongo.results import UpdateResult
 from kafka import KafkaConsumer
-from kafka.errors import KafkaError
 from kafka.consumer.fetcher import ConsumerRecord
+from kafka.errors import KafkaError
+
 from config import settings
+from guest_model import CustomRequest, GuestDocument
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +21,19 @@ CONSUMER_GROUP = "vip_custom_requests_group"
 running = True
 
 
-async def msg_process(msg: ConsumerRecord):
+async def msg_process(msg: ConsumerRecord) -> UpdateResult:
+    custom_request = CustomRequest(**json.loads(msg.value))
+    logger.info(f"Processing custom request: {custom_request}")
     await asyncio.sleep(3)
+
+    res = await GuestDocument.find_one(
+        {"customRequests._id": custom_request.id}
+    ).update_one(
+        Set({"customRequests.$.fulfilled": True}),
+        response_type=UpdateResponse.UPDATE_RESULT,
+    )
+
+    return res
 
 
 # To use really asyncronous code with kafka we could look at https://github.com/aio-libs/aiokafka

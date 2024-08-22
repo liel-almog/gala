@@ -6,7 +6,7 @@ from log import setup_logger
 async def main():
     setup_logger()
     await start_async_mongo()
-    start_consumer()
+    await start_consumer()
 
 
 if __name__ == "__main__":

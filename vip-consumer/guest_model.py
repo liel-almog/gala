@@ -1,21 +1,18 @@
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class CustomRequest(BaseModel):
+    id: PydanticObjectId = Field(alias="_id")
     fulfilled: bool = Field(default=False)
     description: str = Field(max_length=100)
-
-
-class CustomRequestDocument(CustomRequest, Document):
-    pass
 
 
 class Guest(BaseModel):
     name: str
     is_vip: bool | None = Field(alias="isVip", default=False)
     age: int = Field(ge=18)
-    custom_requests: list[CustomRequestDocument] | None = Field(
+    custom_requests: list[CustomRequest] | None = Field(
         default=[], alias="customRequests"
     )
 

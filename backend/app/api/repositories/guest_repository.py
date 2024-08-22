@@ -29,7 +29,7 @@ class GuestRepository:
         return guest
 
     async def create(self, guest: Guest):
-        guest_to_insert = GuestDocument(**guest.model_dump())
+        guest_to_insert = GuestDocument(**guest.model_dump(by_alias=True))
         return await guest_to_insert.save()
 
     async def update_one_by_id(self, id: PydanticObjectId, guest: PartialGuest):

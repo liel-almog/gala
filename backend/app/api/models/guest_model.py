@@ -1,4 +1,4 @@
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from app.api.models.register_model import BasicRegistrationInfo
@@ -6,6 +6,7 @@ from app.core.utils.partial import partial_model
 
 
 class CustomRequest(BaseModel):
+    id: PydanticObjectId = Field(default_factory=PydanticObjectId, alias="_id")
     fulfilled: bool = Field(default=False)
     description: str = Field(max_length=100)
 
