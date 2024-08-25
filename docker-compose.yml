@@ -15,10 +15,10 @@ services:
       - app-tier
     hostname: mongodb
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
-      interval: 10s
+      test: [ "CMD", "echo", "db.runCommand('ping').ok", "|", "mongo", "localhost:27017/test", "--quiet" ]
+      interval: 3s
       timeout: 5s
-      retries: 5
+      retries: 3
 
   kafka-server:
     image: docker.io/bitnami/kafka:3.6
@@ -42,9 +42,9 @@ services:
       - app-tier
     healthcheck:
       test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
-      interval: 10s
+      interval: 3s
       timeout: 5s
-      retries: 5
+      retries: 3
 
   kafka-ui:
     image: docker.io/provectuslabs/kafka-ui:latest
