@@ -1,3 +1,4 @@
+from typing import Optional
 from beanie import Document
 from pydantic import BaseModel, Field
 
@@ -7,9 +8,14 @@ from app.core.utils.partial import partial_model
 
 class Guest(BaseModel):
     name: str
-    events: list[BasicRegistrationInfo] | None = Field(default=[])
-    is_vip: bool | None = Field(alias="isVip", default=False)
+    events: Optional[list[BasicRegistrationInfo]] = Field(default=[])
+    is_vip: Optional[bool] = Field(alias="isVip", default=False)
     age: int = Field(ge=18)
+
+
+@partial_model()
+class PartialGuest(Guest):
+    pass
 
 
 class GuestDocument(Document, Guest):
@@ -19,10 +25,5 @@ class GuestDocument(Document, Guest):
         name = "guests"
 
 
-@partial_model()
-class PartialGuestDocument(GuestDocument):
-    pass
-
-
 class GuestOnlyWithEvents(BaseModel):
-    events: list[BasicRegistrationInfo] | None = Field(default=[])
+    events: list[BasicRegistrationInfo] = Field(default=[])

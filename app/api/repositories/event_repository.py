@@ -1,10 +1,10 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from beanie import PydanticObjectId, UpdateResponse
-from beanie.operators import Set, Pull, AddToSet
+from beanie.operators import AddToSet, Pull, Set
 from fastapi import Depends
-from pymongo.results import UpdateResult
 from motor.motor_asyncio import AsyncIOMotorClientSession
+from pymongo.results import UpdateResult, DeleteResult
 
 from app.api.errors.event_not_found import EventNotFound
 from app.api.models.event_model import (
@@ -18,17 +18,17 @@ from app.api.models.register_model import BasicRegistrationInfo
 
 
 class EventRepository:
-    async def find_all(self):
+    async def find_all(self) -> list[EventDocument]:
         return await EventDocument.find_all().to_list()
 
-    async def find_one_by_id(self, id: PydanticObjectId):
+    async def find_one_by_id(self, id: PydanticObjectId) -> EventDocument:
         event = await EventDocument.get(id)
         if not event:
             raise EventNotFound(f"Event with id {id} not found")
 
         return event
 
-    async def create(self, event: Event):
+    async def create(self, event: Event) -> EventDocument:
         event_to_create = EventDocument(**event.model_dump())
         return await EventDocument.insert_one(event_to_create)
 
@@ -47,7 +47,7 @@ class EventRepository:
 
     async def delete_one_by_id(
         self, id: PydanticObjectId, session: AsyncIOMotorClientSession
-    ) -> UpdateResult:
+    ) -> DeleteResult:
         res = await EventDocument.find_one(EventDocument.id == id).delete_one(
             session=session
         )
@@ -60,8 +60,8 @@ class EventRepository:
     async def remove_guest_from_all_events(
         self,
         guest_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
-    ):
+        session: Optional[AsyncIOMotorClientSession] = None,
+    ) -> UpdateResult:
         return await EventDocument.find_many({"guests._id": guest_id}).update_many(
             Pull({EventDocument.guests: {GuestDocument.id: guest_id}}),
             session=session,
@@ -71,7 +71,7 @@ class EventRepository:
         self,
         event_id: PydanticObjectId,
         guest_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
             Pull({EventDocument.guests: {GuestDocument.id: guest_id}}), session=session
@@ -82,7 +82,9 @@ class EventRepository:
 
         return res
 
-    async def find_guests_by_event_id(self, event_id: PydanticObjectId):
+    async def find_guests_by_event_id(
+        self, event_id: PydanticObjectId
+    ) -> EventOnlyWithGuests:
         event = await EventDocument.find_one(
             EventDocument.id == event_id, projection_model=EventOnlyWithGuests
         )
@@ -95,7 +97,7 @@ class EventRepository:
         self,
         event_id: PydanticObjectId,
         guest_basic_info: BasicRegistrationInfo,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
             AddToSet({EventDocument.guests: guest_basic_info}), session=session
@@ -105,6 +107,37 @@ class EventRepository:
             raise EventNotFound(f"Event with id {event_id} not found")
 
         return res
+
+    async def add_organizer_to_event(
+        self,
+        event_id: PydanticObjectId,
+        organizer_id: PydanticObjectId,
+        session: Optional[AsyncIOMotorClientSession] = None,
+    ) -> UpdateResult:
+        res = await EventDocument.find_one(EventDocument.id == event_id).update_one(
+            AddToSet({EventDocument.organizers: organizer_id}), session=session
+        )
+
+        if not res.matched_count:
+            raise EventNotFound(f"Event with id {event_id} not found")
+
+        return res
+
+    async def remove_organizer_from_all_events(
+        self,
+        organizer_id: PydanticObjectId,
+        session: Optional[AsyncIOMotorClientSession] = None,
+    ) -> UpdateResult:
+        return await EventDocument.find_many(
+            EventDocument.organizers == organizer_id
+        ).update_many(Pull({EventDocument.organizers: organizer_id}), session=session)
+
+    async def find_events_by_organizer_id(
+        self, organizer_id: PydanticObjectId
+    ) -> list[EventDocument]:
+        return await EventDocument.find_many(
+            EventDocument.organizers == organizer_id,
+        ).to_list()
 
 
 def get_event_repository() -> EventRepository:

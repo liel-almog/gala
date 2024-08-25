@@ -6,13 +6,14 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import GuestDocument
+from app.api.models.organizer_model import OrganizerDocument
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 _client: AsyncIOMotorClient | None = None
 
 
-def get_mongo_client():
+def get_mongo_client() -> AsyncIOMotorClient:
     global _client
 
     if not _client:
@@ -32,7 +33,8 @@ async def start_async_mongo():
     try:
         _client = AsyncIOMotorClient(settings.CONNECTION_STRING)
         await init_beanie(
-            _client[settings.DB_NAME], document_models=[EventDocument, GuestDocument]
+            _client[settings.DB_NAME],
+            document_models=[EventDocument, GuestDocument, OrganizerDocument],
         )
         logger.info("Connected to mongoDB")
 
