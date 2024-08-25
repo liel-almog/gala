@@ -9,14 +9,15 @@ from kafka import KafkaConsumer
 from kafka.consumer.fetcher import ConsumerRecord
 from kafka.errors import KafkaError
 
-from config import settings
-from guest_model import CustomRequest, GuestDocument
+from core.config import settings
+from models.guest_model import CustomRequest, GuestDocument
 
 logger = logging.getLogger(__name__)
 
 MIN_COMMIT_COUNT = 10
 TOPICS = ["vip_custom_request"]
 CONSUMER_GROUP = "vip_custom_requests_group"
+
 
 running = True
 

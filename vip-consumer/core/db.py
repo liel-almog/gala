@@ -1,8 +1,8 @@
 import logging
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import settings
-from guest_model import GuestDocument
+from core.config import settings
+from models.guest_model import GuestDocument
 
 logger = logging.getLogger(__name__)
 _client: AsyncIOMotorClient | None = None

@@ -1,6 +1,6 @@
-from consumer import start_consumer
-from db import start_async_mongo
-from log import setup_logger
+from core.consumer import start_consumer
+from core.db import start_async_mongo
+from core.log import setup_logger
 
 
 async def main():
