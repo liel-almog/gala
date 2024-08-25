@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 _client: AsyncIOMotorClient | None = None
 
 
-def get_mongo_client():
+def get_mongo_client() -> AsyncIOMotorClient:
     global _client
 
     if not _client:
