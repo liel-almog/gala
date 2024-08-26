@@ -1,17 +1,18 @@
 # guest_service.py
-from typing import Annotated
+from typing import Annotated, Optional
 
 from beanie import PydanticObjectId
 from beanie.operators import Set
 from fastapi import Depends
 from kafka import KafkaProducer
 from motor.motor_asyncio import AsyncIOMotorClientSession, AsyncIOMotorClient
-from pymongo.results import UpdateResult
+from pymongo.results import UpdateResult, DeleteResult
 
 from app.api.models.event_model import EventDocument
 from app.api.models.guest_model import (
     Guest,
     GuestDocument,
+    GuestOnlyWithEvents,
     PartialGuest,
 )
 from app.api.models.register_model import BasicRegistrationInfo
@@ -39,10 +40,10 @@ class GuestService:
         self._client = client
         self._kafka_producer = kafka_producer
 
-    async def get_all(self):
+    async def get_all(self) -> list[GuestDocument]:
         return await self._guest_repository.find_all()
 
-    async def get_one_by_id(self, id: PydanticObjectId):
+    async def get_one_by_id(self, id: PydanticObjectId) -> GuestDocument:
         return await self._guest_repository.find_one_by_id(id)
 
     async def create(self, guest: Guest):
@@ -69,7 +70,9 @@ class GuestService:
     ) -> UpdateResult:
         return await self._guest_repository.update_one_by_id(id, guest)
 
-    async def delete_one_by_id(self, id: PydanticObjectId):
+    async def delete_one_by_id(
+        self, id: PydanticObjectId
+    ) -> tuple[DeleteResult, UpdateResult]:
         async with await self._client.start_session() as session:
             async with session.start_transaction():
                 delete_guest = await self._guest_repository.delete_one_by_id(
@@ -86,7 +89,7 @@ class GuestService:
     async def remove_event_from_all_guests(
         self,
         event_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await self._guest_repository.remove_event_from_all_guests(
             event_id, session=session
@@ -96,20 +99,20 @@ class GuestService:
         self,
         guest_id: PydanticObjectId,
         event_id: PydanticObjectId,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         return await self._guest_repository.remove_event_from_guest(
             guest_id, event_id, session=session
         )
 
-    async def get_events_by_guest_id(self, id: PydanticObjectId):
+    async def get_events_by_guest_id(self, id: PydanticObjectId) -> GuestOnlyWithEvents:
         return await self._guest_repository.find_guest_events_by_id(id)
 
     async def add_event_to_guest(
         self,
         guest_id: PydanticObjectId,
         event_basic_info: BasicRegistrationInfo,
-        session: AsyncIOMotorClientSession | None = None,
+        session: Optional[AsyncIOMotorClientSession] = None,
     ) -> UpdateResult:
         self._guest_repository.add_event_to_guest(
             guest_id, event_basic_info, session=session
