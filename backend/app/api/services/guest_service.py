@@ -19,7 +19,7 @@ from app.api.models.register_model import BasicRegistrationInfo
 from app.api.repositories.event_repository import CommonEventRepository, EventRepository
 from app.api.repositories.guest_repository import CommonGuestRepository, GuestRepository
 from app.core.db import CommonMongoClient
-from app.core.kafka import CommonKaftaProducer, VIP_CUSTOM_REQUEST_TOPIC
+from app.core.kafka import CommonKafkaProducer, VIP_CUSTOM_REQUEST_TOPIC
 
 
 class GuestService:
@@ -123,7 +123,7 @@ def get_guest_service(
     guest_repository: CommonGuestRepository,
     event_repository: CommonEventRepository,
     client: CommonMongoClient,
-    kafka_producer: CommonKaftaProducer,
+    kafka_producer: CommonKafkaProducer,
 ):
     return GuestService(client, guest_repository, event_repository, kafka_producer)
 
