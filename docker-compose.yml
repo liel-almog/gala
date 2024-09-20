@@ -1,16 +1,24 @@
 services:
   mongo:
-    image: mongo:latest
-    container_name: mongo-container
+    # Use mongodb community server image. UBI (Universal Base Image) is a minimal base image that is based on Red Hat Universal Base Image (UBI).
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    container_name: mongodb
     restart: always
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      - MONGODB_INITDB_ROOT_USERNAME=liel-almog
+      - MONGODB_INITDB_ROOT_PASSWORD=password123
+    networks:
+      - app-tier
+    hostname: mongodb
+    healthcheck:
+      test: [ "CMD", "echo", "db.runCommand('ping').ok", "|", "mongo", "localhost:27017/test", "--quiet" ]
+      interval: 3s
+      timeout: 5s
+      retries: 3
 
   kafka-server:
     image: docker.io/bitnami/kafka:3.6
@@ -32,6 +40,11 @@ services:
     hostname: kafka
     networks:
       - app-tier
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
+      interval: 3s
+      timeout: 5s
+      retries: 3
 
   kafka-ui:
     image: docker.io/provectuslabs/kafka-ui:latest
@@ -43,10 +56,36 @@ services:
       - app-tier
   backend:
     build:
-      context: .
+      context: backend
       dockerfile: Dockerfile
     ports:
       - 8080:80
+    depends_on:
+      kafka-server:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+    environment:
+      - KAFKA_BROKERS=["kafka:9092"]
+      - CONNECTION_STRING=mongodb://liel-almog:password123@mongodb:27017
+    networks:
+      - app-tier
+
+  vip-consumer:
+    build:
+      context: vip-consumer
+      dockerfile: Dockerfile
+    depends_on:
+      kafka-server:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKERS=["kafka:9092"]
+      - CONNECTION_STRING=mongodb://liel-almog:password123@mongodb:27017
+    networks:
+      - app-tier
 
 volumes:
   mongo-data:

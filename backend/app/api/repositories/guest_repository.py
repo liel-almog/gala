@@ -28,8 +28,10 @@ class GuestRepository:
 
         return guest
 
-    async def create(self, guest: Guest) -> GuestDocument:
-        guest_to_insert = GuestDocument(**guest.model_dump())
+    async def create(self, guest: Guest):
+        # Be sure to dump by alias to match the model
+        # https://github.com/pydantic/pydantic/issues/8379
+        guest_to_insert = GuestDocument(**guest.model_dump(by_alias=True))
         return await guest_to_insert.save()
 
     async def update_one_by_id(

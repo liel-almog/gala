@@ -1,13 +1,9 @@
 import logging
-from typing import Annotated
 from beanie import init_beanie
-from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.api.models.event_model import EventDocument
-from app.api.models.guest_model import GuestDocument
-from app.api.models.organizer_model import OrganizerDocument
-from app.core.config import settings
+from core.config import settings
+from models.guest_model import GuestDocument
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +21,7 @@ class MongoDBClientManager:
             self._client = AsyncIOMotorClient(settings.CONNECTION_STRING)
             await init_beanie(
                 self._client[settings.DB_NAME],
-                document_models=[EventDocument, GuestDocument, OrganizerDocument],
+                document_models=[GuestDocument],
             )
             logger.info("Connected to mongoDB")
 
@@ -49,6 +45,3 @@ class MongoDBClientManager:
 
 
 mongo_client_manager = MongoDBClientManager()
-CommonMongoClient = Annotated[
-    AsyncIOMotorClient, Depends(mongo_client_manager.get_mongo_client, use_cache=True)
-]
